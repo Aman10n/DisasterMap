@@ -341,6 +341,8 @@ The development Mosquitto configuration allows anonymous clients, and the API de
 
 Do not use this software as the sole basis for rescue decisions or autonomous movement around people.
 
+Please report vulnerabilities privately according to the [security policy](SECURITY.md).
+
 ## Contributing
 
 Contributions are welcome. Keep simulation behavior clearly separated from live integrations, avoid committing secrets or mission artifacts, include reproducible validation where practical, and document new MQTT topics, API contracts, configuration, and hardware assumptions.

@@ -161,4 +161,3 @@ The checked-in configuration is intended for local development and does not yet 
 Docker Compose starts the command-center services on one development host. The Nginx container serves the compiled dashboard at port `3000` and proxies API and WebSocket traffic to FastAPI. Robot and ESP32 devices connect to the host's LAN address for MQTT.
 
 For a production topology, separate public ingress from the device network, terminate TLS, isolate data services, add health monitoring and backups, and provision secrets through a dedicated secret manager.
-
