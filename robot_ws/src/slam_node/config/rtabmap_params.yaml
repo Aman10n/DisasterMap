@@ -1,0 +1,41 @@
+# ============================================
+# RTAB-Map Parameters for Disaster SLAM
+# ============================================
+
+rtabmap:
+  ros__parameters:
+    subscribe_depth: true
+    subscribe_rgb: true
+    subscribe_scan_cloud: true
+    approx_sync: true
+    frame_id: "base_link"
+    map_frame_id: "map"
+    odom_frame_id: "odom"
+
+    # Visual features for loop closure
+    Kp/DetectorStrategy: 6  # SURF
+    Kp/MaxFeatures: 400
+    Kp/NNStrategy: 1
+
+    # Loop closure
+    Rtabmap/DetectionRate: 2.0
+    RGBD/LoopClosureReextractFeatures: true
+    Rtabmap/LoopThr: 0.11
+
+    # ICP for LiDAR scan matching
+    Icp/Strategy: 1  # libpointmatcher
+    Icp/MaxCorrespondenceDistance: 0.1
+    Icp/VoxelSize: 0.05
+
+    # OctoMap
+    Grid/3D: true
+    Grid/CellSize: 0.05
+    GridGlobal/OctoMapDepth: 16
+
+    # Graph optimization
+    Optimizer/Strategy: 1  # g2o
+    Optimizer/Iterations: 20
+
+    # Memory management
+    Mem/STMSize: 30
+    Mem/IncrementalMemory: true

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>navigation_node</name>
+  <version>1.0.0</version>
+  <description>Nav2 configuration and frontier exploration for disaster USAR</description>
+  <maintainer email="robotics@disastermap.io">DisasterMap Team</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <depend>rclpy</depend>
+  <depend>nav2_bringup</depend>
+  <depend>nav2_bt_navigator</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <exec_depend>launch_ros</exec_depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>

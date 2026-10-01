@@ -1,0 +1,153 @@
+
+# ============================================
+# DisasterMap — Docker Compose Orchestration
+# 7 services: mosquitto, timescaledb, redis,
+# minio, api, worker, nginx
+# ============================================
+
+services:
+  # --- MQTT Broker ---
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: dm-mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/#' -C 1 -i healthcheck -W 3 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # --- TimescaleDB + PostGIS ---
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: dm-timescaledb
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-disastermap}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-replace-with-a-strong-password}
+      POSTGRES_DB: ${POSTGRES_DB:-disastermap}
+    ports:
+      - "5435:5432"
+    volumes:
+      - timescaledb_data:/home/postgres/pgdata/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-disastermap}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Redis ---
+  redis:
+    image: redis:7-alpine
+    container_name: dm-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # --- MinIO Object Storage ---
+  minio:
+    image: minio/minio:latest
+    container_name: dm-minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-disastermap-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-replace-with-a-strong-password}
+    ports:
+      - "9000:9000"
+      - "9002:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # --- FastAPI Server ---
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: disaster-map-server:latest
+    container_name: dm-api
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./server:/app
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --log-level info
+    restart: unless-stopped
+
+  # --- Celery Worker ---
+  worker:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: disaster-map-server:latest
+    container_name: dm-worker
+    env_file: .env
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./server:/app
+    command: >
+      celery -A app.workers.celery_app worker
+      --loglevel=info
+      --concurrency=4
+      --pool=prefork
+    restart: unless-stopped
+
+  # --- Nginx (Dashboard + Reverse Proxy) ---
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    image: disaster-map-dashboard:latest
+    container_name: dm-nginx
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:
+  timescaledb_data:
+  redis_data:
+  minio_data:

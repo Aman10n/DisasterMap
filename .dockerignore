@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env
+**/.env
+**/node_modules
+**/dist
+**/__pycache__
+**/*.pyc
+robot_ws/build
+robot_ws/install
+robot_ws/log
+data
+reports
