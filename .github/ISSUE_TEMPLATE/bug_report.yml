@@ -1,0 +1,53 @@
+name: Bug report
+description: Report a reproducible problem in the dashboard, API, robot stack, or firmware.
+title: "[Bug]: "
+labels: [bug, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping improve DisasterMap. Do not include credentials, victim data, or sensitive mission recordings.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Dashboard
+        - FastAPI server
+        - Docker infrastructure
+        - ROS 2 workspace
+        - ESP32 firmware
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem
+      description: Describe what happened and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Start ...
+        2. Open ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include OS, browser, Docker/ROS version, board model, and relevant hardware.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs or screenshots
+      description: Remove secrets, IP addresses, and personal or mission-sensitive data.
+      render: shell
+

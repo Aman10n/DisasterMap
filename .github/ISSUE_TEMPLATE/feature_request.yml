@@ -1,0 +1,45 @@
+name: Feature request
+description: Propose a focused improvement to DisasterMap.
+title: "[Feature]: "
+labels: [enhancement, needs-triage]
+body:
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Dashboard
+        - FastAPI server
+        - Data and messaging
+        - ROS 2 workspace
+        - ESP32 firmware
+        - Documentation
+        - Cross-component
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Operational problem
+      description: What problem would this feature solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the workflow, interfaces, and expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Safety and security impact
+      description: Explain any effect on robot motion, responder decisions, credentials, or sensitive data.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
