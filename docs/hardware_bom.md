@@ -1,42 +1,86 @@
-# DisasterMap — Hardware Bill of Materials
+# Hardware bill of materials
 
-## Robot Compute
+This bill of materials describes the reference hardware envisioned for DisasterMap. It is not a procurement guarantee: confirm availability, regional radio rules, voltage levels, environmental ratings, and mechanical compatibility before purchasing.
+
+## Robot compute
+
+| Item | Quantity | Purpose | Notes |
+|---|---:|---|---|
+| NVIDIA Jetson Xavier NX 16 GB | 1 | SLAM, perception, and Nav2 | Or a supported modern Jetson equivalent |
+| Raspberry Pi 4B 8 GB | 1 | Sensor and gateway workloads | Optional secondary computer |
+| Industrial microSD or NVMe storage | 1 | OS, models, logs, and rosbags | Prefer high-endurance media |
+| Regulated DC power supplies | As required | Stable compute and sensor rails | Size for transient loads |
+
+## Robot sensing
+
+| Item | Quantity | Interface | Intended role |
+|---|---:|---|---|
+| Velodyne VLP-16 | 1 | Ethernet | Reference 3D LiDAR for SLAM |
+| RPLIDAR A3 | 1 | USB | Lower-cost 2D LiDAR alternative |
+| Intel RealSense D435i | 1 | USB 3 | RGB-D and visual-inertial input |
+| FLIR Lepton 3.5 | 1 | SPI | Thermal anomaly imaging |
+| BNO085 IMU | 1 | UART/I2C | High-rate orientation and acceleration |
+| MQ-2 gas sensor | 1 | Analog | Smoke and combustible-gas prototype sensing |
+| MQ-9 gas sensor | 1 | Analog | Carbon monoxide and flammable-gas prototype sensing |
+| MQ-135 gas sensor | 1 | Analog | Air-quality prototype sensing |
+| MH-Z19B | 1 | UART | NDIR carbon-dioxide measurement |
+| ICS-43434 microphones | 4 | I2S | Experimental acoustic array |
+| DWM1001C UWB tag | 1 | SPI/UART | Indoor ranging reference |
+| Wheel encoders | 2 | Quadrature | Chassis odometry |
+| Wide-angle UVC camera | 1 | USB | Operator video feed |
+
+> MQ-series sensors require heater control, warm-up, calibration, compensation, and application-specific validation. They must not be treated as certified life-safety instruments.
+
+## Mobility and safety
+
 | Item | Quantity | Purpose |
-|------|----------|---------|
-| NVIDIA Jetson Xavier NX 16GB | 1 | Primary compute: SLAM, AI, Nav2 |
-| Raspberry Pi 4B 8GB | 1 | Secondary: gas sensors, audio, ESP32 gateway |
+|---|---:|---|
+| Differential-drive chassis and motors | 1 set | Robot mobility |
+| Motor drivers with current limiting | 1 set | Controlled motor power |
+| Main battery with BMS | 1 | Energy storage and protection |
+| Hardware emergency-stop circuit | 1 | Independent actuator power isolation |
+| Bump sensors | 2 or more | Contact-level collision detection |
+| Status beacon and audible indicator | 1 each | Nearby responder awareness |
+| Protective enclosure and cable glands | As required | Dust, impact, and strain protection |
 
-## Sensors (On-Robot)
-| Item | Quantity | Interface | Purpose |
-|------|----------|-----------|---------|
-| Velodyne VLP-16 3D LiDAR | 1 | Ethernet | Primary SLAM (100m range) |
-| RPLIDAR A3 (alternative) | 1 | USB | Lower-cost 2D SLAM (25m) |
-| Intel RealSense D435i | 1 | USB 3.0 | RGB-D + IMU for visual SLAM |
-| FLIR Lepton 3.5 | 1 | SPI | Thermal imaging (160×120) |
-| BNO085 9-DoF IMU | 1 | UART | High-rate IMU (400Hz) |
-| MQ-2 Gas Sensor | 1 | Analog (ADC) | Methane, LPG, CO |
-| MQ-9 Gas Sensor | 1 | Analog (ADC) | CO, flammable gases |
-| MQ-135 Gas Sensor | 1 | Analog (ADC) | NH₃, benzene, smoke |
-| MH-Z19B CO₂ Sensor | 1 | UART | NDIR CO₂ (0-5000ppm) |
-| ICS-43434 MEMS Microphone | 4 | I2S | Tetrahedral acoustic array |
-| DWM1001C UWB Tag | 1 | SPI | Indoor positioning tag |
-| Optical Wheel Encoders | 2 | Quadrature | 1024 CPR odometry |
-| Wide-Angle Action Camera | 1 | USB-UVC | Teleoperation video feed |
+## Deployable sensor node (per node)
 
-## Deployable IoT Nodes (×5)
-| Item | Per Node | Interface | Purpose |
-|------|----------|-----------|---------|
-| ESP32-S3 WROOM | 1 | — | MCU (dual-core 240MHz) |
-| BME688 | 1 | I2C | Temp, humidity, pressure, VOC |
-| MQ-7 CO Sensor | 1 | Analog | Carbon monoxide detection |
-| MPU6050 | 1 | I2C | Vibration/acceleration |
-| PIR Motion Sensor | 1 | Digital | Passive infrared motion |
-| 2600mAh LiPo + TP4056 | 1 | — | 12-hour battery life |
+| Item | Quantity | Interface | Intended role |
+|---|---:|---|---|
+| ESP32-S3 WROOM | 1 | — | Node controller and ESP-NOW radio |
+| BME688 | 1 | I2C | Temperature, humidity, pressure, and VOC index |
+| MQ-7 | 1 | Analog | Prototype carbon-monoxide sensing |
+| MPU6050 | 1 | I2C | Vibration and acceleration |
+| PIR motion sensor | 1 | Digital | Passive infrared motion indication |
+| 2600 mAh LiPo with protection | 1 | Power | Portable supply |
+| Charger and regulator | 1 | Power | Safe charging and stable voltage rails |
+| Rugged vented enclosure | 1 | — | Mechanical and environmental protection |
 
-## Infrastructure
+The firmware currently models five sensor nodes, but the network size should be determined through measured radio, latency, collision, and battery tests.
+
+## Command-center infrastructure
+
 | Item | Quantity | Purpose |
-|------|----------|---------|
-| DWM1001-DEV UWB Anchor Kit | 4 | Indoor positioning anchors |
-| LoRa SX1276 Module (915MHz) | 2 | Fallback telemetry (robot + base) |
-| ESP32 MQTT Gateway | 1 | ESP-NOW → WiFi → MQTT bridge |
-| 5GHz WiFi Router (802.11ac) | 1 | Primary radio link |
+|---|---:|---|
+| Development workstation | 1 | Docker services and operator dashboard |
+| 5 GHz Wi-Fi access point | 1 | Primary robot-to-command-center link |
+| ESP32 MQTT gateway | 1 | ESP-NOW to MQTT bridge |
+| DWM1001-DEV anchors | 4 or more | UWB reference geometry |
+| SX1276 LoRa modules | 2 | Experimental low-bandwidth fallback |
+| Uninterruptible power supply | 1 | Command-center continuity |
+
+Use only locally permitted radio bands and power levels. LoRa frequency selection varies by country.
+
+## Integration checklist
+
+Before controlled hardware testing:
+
+- verify every voltage rail and common ground;
+- measure peak compute, motor, heater, and radio current;
+- calibrate gas, IMU, camera, LiDAR, encoder, and UWB devices;
+- document coordinate frames and rigid-body transforms;
+- validate emergency-stop behavior without network or software assistance;
+- add fuses, strain relief, thermal protection, and battery containment;
+- test loss of Wi-Fi, MQTT, localization, and sensor input;
+- confirm that simulated data is disabled and visibly absent;
+- retain manufacturer datasheets and calibration records.

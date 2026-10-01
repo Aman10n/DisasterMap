@@ -50,4 +50,3 @@ body:
       label: Sanitized logs or screenshots
       description: Remove secrets, IP addresses, and personal or mission-sensitive data.
       render: shell
-
