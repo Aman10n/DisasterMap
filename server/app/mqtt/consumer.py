@@ -27,6 +27,7 @@ class MQTTConsumer:
         self._client = None
         self._handlers = {}
         self._ws_broadcast_callback = None
+        self._event_loop = None
 
     def set_broadcast_callback(self, callback):
         """Set WebSocket broadcast callback for real-time forwarding."""
@@ -35,6 +36,7 @@ class MQTTConsumer:
     async def start(self):
         """Start the MQTT consumer loop."""
         self._running = True
+        self._event_loop = asyncio.get_running_loop()
         logger.info(
             "MQTT consumer starting",
             broker=settings.mqtt_broker_host,
@@ -128,14 +130,14 @@ class MQTTConsumer:
                 data = {"raw": payload.hex()}
 
             # Forward to WebSocket clients for real-time dashboard
-            if self._ws_broadcast_callback:
-                asyncio.get_event_loop().call_soon_threadsafe(
-                    asyncio.create_task,
+            if self._ws_broadcast_callback and self._event_loop:
+                asyncio.run_coroutine_threadsafe(
                     self._ws_broadcast_callback({
                         "type": "mqtt",
                         "topic": topic,
                         "data": data,
-                    })
+                    }),
+                    self._event_loop,
                 )
 
             # Log (debug level for high-frequency topics)

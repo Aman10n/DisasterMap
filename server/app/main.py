@@ -42,6 +42,7 @@ async def lifespan(app: FastAPI):
     logger.info("Database initialized")
 
     # Start MQTT consumer in background
+    mqtt_consumer.set_broadcast_callback(websocket.broadcast)
     mqtt_task = asyncio.create_task(mqtt_consumer.start())
     logger.info("MQTT consumer started")
 

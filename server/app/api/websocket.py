@@ -4,10 +4,13 @@ import asyncio
 import json
 import structlog
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from typing import List, Set
+from typing import Set
+
+from app.config import get_settings
 
 logger = structlog.get_logger()
 router = APIRouter()
+settings = get_settings()
 
 # Connected WebSocket clients
 connected_clients: Set[WebSocket] = set()
@@ -24,7 +27,7 @@ async def broadcast(message: dict):
             await ws.send_text(data)
         except Exception:
             disconnected.add(ws)
-    connected_clients -= disconnected
+    connected_clients.difference_update(disconnected)
 
 
 @router.websocket("/live")
@@ -36,6 +39,7 @@ async def websocket_live(ws: WebSocket):
     await ws.accept()
     connected_clients.add(ws)
     logger.info("WebSocket client connected", total=len(connected_clients))
+    sim_task = None
 
     try:
         # Send initial state
@@ -45,8 +49,10 @@ async def websocket_live(ws: WebSocket):
             "message": "DisasterMap real-time stream active",
         })
 
-        # Start simulation data stream for demo
-        sim_task = asyncio.create_task(_simulation_stream(ws))
+        # Keep demo telemetry available during development without mixing it
+        # into production MQTT streams.
+        if settings.debug:
+            sim_task = asyncio.create_task(_simulation_stream(ws))
 
         # Listen for incoming messages (commands from dashboard)
         while True:
@@ -62,6 +68,8 @@ async def websocket_live(ws: WebSocket):
     except WebSocketDisconnect:
         pass
     finally:
+        if sim_task:
+            sim_task.cancel()
         connected_clients.discard(ws)
         logger.info("WebSocket client disconnected", total=len(connected_clients))
 
